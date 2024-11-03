@@ -1,15 +1,23 @@
 import 'dart:io';
 
 import 'package:call_me_app/core/theme/app_palette.dart';
+import 'package:call_me_app/core/utils/show_calls_dialog.dart';
+import 'package:call_me_app/core/utils/show_toast.dart';
 import 'package:call_me_app/core/utils/show_warning_dialog.dart';
 import 'package:call_me_app/core/widgets/contact_list_tile.dart';
+import 'package:call_me_app/core/widgets/theme_button.dart';
 import 'package:call_me_app/models/contact.dart';
-import 'package:call_me_app/viewmodel/auth_bloc/auth_bloc.dart';
+
 import 'package:call_me_app/viewmodel/contact_bloc/contact_bloc.dart';
+import 'package:call_me_app/viewmodel/theme_bloc/theme_bloc.dart';
+import 'package:call_me_app/viewmodel/user_bloc/user_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:toastification/toastification.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -19,31 +27,62 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  void makePhoneCall(String phoneNumber) async {
+    final Uri launchUri = Uri(
+      scheme: 'tel',
+      path: phoneNumber,
+    );
+    await launchUrl(launchUri);
+  }
+
+  void sendSms(String phoneNumber) async {
+    final Uri launchUri = Uri(
+      scheme: 'sms',
+      path: phoneNumber,
+    );
+    await launchUrl(launchUri);
+  }
+
   @override
   Widget build(BuildContext context) {
-    final user = (context.read<AuthBloc>().state as UserIsAuthenticated).user;
     return Scaffold(
         appBar: AppBar(
-            leading: const SizedBox(),
-            actions: [
-              Container(
-                height: 60,
-                width: 50,
-                decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(10),
-                    image:
-                        DecorationImage(image: FileImage(File(user.picture)))),
-              ),
-              const SizedBox(
-                width: 10,
-              )
-            ],
-            centerTitle: true,
-            title: Image.asset(
-              'assets/app_logo.png',
-              width: 70,
-              height: 70,
-            )),
+          leading: const SizedBox(),
+          centerTitle: true,
+          title: ColorFiltered(
+              colorFilter: ColorFilter.mode(
+                  Theme.of(context).colorScheme.primary, BlendMode.srcIn),
+              child: Image.asset(
+                width: 80,
+                height: 80,
+                'assets/app_logo.png',
+              )),
+          actions: [
+            BlocBuilder<ThemeBloc, ThemeState>(
+              builder: (context, state) {
+                bool isDark = state is DarkThemeState;
+                return ThemeButton(
+                  onPressed: () {
+                    BlocProvider.of<ThemeBloc>(context)
+                        .add(ToggleTheme(isDark ? 'light' : 'dark'));
+                  },
+                  icon: isDark
+                      ? const Icon(
+                          Icons.light_mode_outlined,
+                          size: 20,
+                        )
+                      : const Icon(
+                          Icons.dark_mode_outlined,
+                          size: 20,
+                        ),
+                );
+              },
+            ),
+            const SizedBox(
+              width: 10,
+            )
+          ],
+        ),
         floatingActionButton: FloatingActionButton(
             backgroundColor: AppPalette.red,
             child: const Icon(
@@ -53,7 +92,7 @@ class _HomeScreenState extends State<HomeScreen> {
             onPressed: () {
               const storage = FlutterSecureStorage();
               storage.delete(key: 'userId');
-              context.go('/welcome-screen');
+              context.go('/login-screen');
             }),
         body: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 30),
@@ -62,9 +101,12 @@ class _HomeScreenState extends State<HomeScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text(
+                  Text(
                     'Contacts',
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
+                    style: GoogleFonts.poppins(
+                        fontSize: 22,
+                        fontWeight: FontWeight.w700,
+                        color: Theme.of(context).colorScheme.primary),
                   ),
                   ElevatedButton(
                       onPressed: () {
@@ -109,7 +151,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           child: Text(
                             'NO CONTACTS YET',
                             style: TextStyle(
-                                color: AppPalette.secondary,
+                                color: AppPalette.lightGrey,
                                 fontSize: 18,
                                 fontWeight: FontWeight.w700),
                           ),
@@ -126,6 +168,17 @@ class _HomeScreenState extends State<HomeScreen> {
                         itemBuilder: (context, index) {
                           final contact = contacts[index];
                           return ContactListTile(
+                              onTap: () {
+                                showCallsDialog(
+                                    context: context,
+                                    onSendMessage: () {
+                                      sendSms('+216${contact.phoneNumber}');
+                                    },
+                                    onCall: () async {
+                                      makePhoneCall(
+                                          '+216 ${contact.phoneNumber}');
+                                    });
+                              },
                               onEdit: () {
                                 context.push('/edit-contact-screen',
                                     extra: contact);
@@ -143,6 +196,10 @@ class _HomeScreenState extends State<HomeScreen> {
                                         DeleteContact(
                                             phoneNumber: contact.phoneNumber,
                                             contacts: contacts));
+                                    showToast(
+                                        message: 'Contact deleted successfully',
+                                        context: context,
+                                        type: ToastificationType.success);
                                   },
                                 );
                               },

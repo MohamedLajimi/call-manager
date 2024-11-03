@@ -1,5 +1,3 @@
-import 'package:call_me_app/models/call.dart';
-import 'package:call_me_app/models/contact.dart';
 import 'package:equatable/equatable.dart';
 
 

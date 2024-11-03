@@ -1,17 +1,19 @@
 // ignore_for_file: use_build_context_synchronously
 
-import 'package:call_me_app/bloc_observer.dart';
 import 'package:call_me_app/core/theme/app_palette.dart';
 import 'package:call_me_app/core/utils/show_toast.dart';
-import 'package:call_me_app/core/widgets/custom_app_bar.dart';
 import 'package:call_me_app/core/widgets/custom_button.dart';
 import 'package:call_me_app/core/widgets/custom_textfield.dart';
-import 'package:call_me_app/database/database_helper.dart';
+import 'package:call_me_app/core/widgets/loader.dart';
+import 'package:call_me_app/core/widgets/theme_button.dart';
 import 'package:call_me_app/viewmodel/auth_bloc/auth_bloc.dart';
+import 'package:call_me_app/viewmodel/theme_bloc/theme_bloc.dart';
+import 'package:call_me_app/viewmodel/user_bloc/user_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:toastification/toastification.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -24,6 +26,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final _loginFormKey = GlobalKey<FormState>();
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
+  bool obscureText = true;
 
   @override
   void dispose() {
@@ -35,44 +38,72 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: PreferredSize(
-          preferredSize: const Size.fromHeight(kToolbarHeight),
-          child: CustomAppBar(
-              onGoBack: () {
-                context.pop();
-              },
-              title: Image.asset(
-                'assets/app_logo.png',
-                height: 80,
-                width: 80,
-              ))),
+      appBar: AppBar(
+        centerTitle: true,
+        title: ColorFiltered(
+            colorFilter: ColorFilter.mode(
+                Theme.of(context).colorScheme.primary, BlendMode.srcIn),
+            child: Image.asset(
+              width: 80,
+              height: 80,
+              'assets/app_logo.png',
+            )),
+        actions: [
+          BlocBuilder<ThemeBloc, ThemeState>(
+            builder: (context, state) {
+              bool isDark = state is DarkThemeState;
+              return ThemeButton(
+                onPressed: () {
+                  BlocProvider.of<ThemeBloc>(context)
+                      .add(ToggleTheme(isDark ? 'light' : 'dark'));
+                },
+                icon: isDark
+                    ? const Icon(
+                        Icons.light_mode_outlined,
+                        size: 20,
+                      )
+                    : const Icon(
+                        Icons.dark_mode_outlined,
+                        size: 20,
+                      ),
+              );
+            },
+          ),
+          const SizedBox(
+            width: 10,
+          )
+        ],
+      ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 20),
+        padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 30),
         child: Form(
             key: _loginFormKey,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Enter your email and your password to continue !',
+                  'Hi There ! Login or create a new account if you don\'t have a one .',
                   style: GoogleFonts.poppins(
                       fontSize: 24,
-                      color: AppPalette.primary,
+                      color: Theme.of(context).colorScheme.primary,
                       fontWeight: FontWeight.w700),
-                ),
-                const SizedBox(
-                  height: 20,
-                ),
-                const Text(
-                  'Please enter a valid email and password to continue !',
-                  style: TextStyle(fontSize: 15),
                 ),
                 const SizedBox(
                   height: 30,
                 ),
                 const Text(
+                  'Please enter a valid email and password to continue !',
+                  style: TextStyle(fontSize: 15, color: AppPalette.lightGrey),
+                ),
+                const SizedBox(
+                  height: 30,
+                ),
+                Text(
                   'Email',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+                  style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      color: Theme.of(context).colorScheme.primary),
                 ),
                 const SizedBox(
                   height: 5,
@@ -84,43 +115,57 @@ class _LoginScreenState extends State<LoginScreen> {
                 const SizedBox(
                   height: 20,
                 ),
-                const Text(
+                Text(
                   'Password',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+                  style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      color: Theme.of(context).colorScheme.primary),
                 ),
                 const SizedBox(
                   height: 5,
                 ),
                 CustomTextfield(
+                    obscureText: obscureText,
+                    onTap: () {
+                      setState(() {
+                        obscureText = !obscureText;
+                      });
+                    },
                     inputType: TextInputType.text,
                     controller: passwordController,
                     hintText: 'Enter Your Password'),
                 const SizedBox(
                   height: 40,
                 ),
-                BlocListener<AuthBloc, AuthState>(
+                BlocConsumer<AuthBloc, AuthState>(
                   listener: (context, state) {
-                    if (state is UserIsAuthenticated) {
-                      context.go('/home-screen/${state.user.id}',extra: state.user.name);
+                    if (state is AuthSuccess) {
+                      context.read<UserBloc>().add(SetUser(state.user));
+                      context.go('/home-screen/${state.user.id}',
+                          extra: state.user.name);
+                    } else if (state is AuthFailure) {
+                      showToast(message: state.error,context: context,type: ToastificationType.error);
                     }
                   },
-                  child: Align(
-                    alignment: Alignment.center,
-                    child: CustomButton(
-                        onPressed: () async {
-                          if (_loginFormKey.currentState!.validate()) {
-                            final user = await DatabaseHelper().loginUser(
-                                emailController.text, passwordController.text);
-                            if (user != null) {
-                              context.read<AuthBloc>().add(SetUser(user));
-                            } else {
-                              showToast(message: 'Invalid credentials');
+                  builder: (context, state) {
+                    if (state is AuthLoading) {
+                      return const Loader();
+                    }
+                    return Align(
+                      alignment: Alignment.center,
+                      child: CustomButton(
+                          onPressed: () async {
+                            if (_loginFormKey.currentState!.validate()) {
+                              context.read<AuthBloc>().add(LoginUser(
+                                  email: emailController.text,
+                                  password: passwordController.text));
                             }
-                          }
-                        },
-                        title: 'LOGIN',
-                        backgroundColor: AppPalette.green),
-                  ),
+                          },
+                          title: 'LOGIN',
+                          backgroundColor: AppPalette.blue),
+                    );
+                  },
                 ),
                 const SizedBox(
                   height: 50,
@@ -131,17 +176,19 @@ class _LoginScreenState extends State<LoginScreen> {
                     const Text(
                       'Don\'t have an account ?',
                       style:
-                          TextStyle(fontSize: 13, color: AppPalette.secondary),
+                          TextStyle(fontSize: 14, color: AppPalette.lightGrey),
                     ),
                     const SizedBox(
                       width: 10,
                     ),
                     InkWell(
                         onTap: () => context.push('/register-screen'),
-                        child: const Text(
+                        child: Text(
                           'Register Now',
                           style: TextStyle(
-                              fontWeight: FontWeight.w700, fontSize: 13),
+                              fontWeight: FontWeight.w700,
+                              fontSize: 14,
+                              color: Theme.of(context).colorScheme.primary),
                         ))
                   ],
                 )

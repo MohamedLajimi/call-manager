@@ -3,13 +3,10 @@ import 'package:call_me_app/core/theme/app_palette.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-void showWarningDialog(
+void showCallsDialog(
     {required BuildContext context,
-    required String title,
-    required String desc,
-    required String btnOkText,
-    required String btnCancelText,
-    required VoidCallback onConfirm}) {
+    required VoidCallback onSendMessage,
+    required VoidCallback onCall}) {
   AwesomeDialog(
           dialogBackgroundColor: Theme.of(context).colorScheme.onPrimary,
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
@@ -22,14 +19,16 @@ void showWarningDialog(
               color: Theme.of(context).colorScheme.primary),
           descTextStyle:
               const TextStyle(fontSize: 14, color: AppPalette.lightGrey),
-          title: title,
-          desc: desc,
-          btnCancelOnPress: () {},
-          btnOkOnPress: onConfirm,
-          btnOkText: btnOkText,
-          buttonsTextStyle: const TextStyle(color: Colors.white),
-          btnCancelText: btnCancelText,
-          btnOkColor: Colors.red,
-          btnCancelColor: Colors.blueAccent)
+          title: 'ACTIONS',
+          desc: 'Make a phone call or send a message.',
+          btnCancelOnPress: onSendMessage,
+          btnOkOnPress: onCall,
+          btnOkIcon: Icons.call ,
+          btnOkText: 'Call',
+          btnCancelText: 'Send Message',
+          btnCancelIcon: Icons.chat_bubble_outline,
+          buttonsTextStyle: const TextStyle(color: Colors.white, fontSize: 16),
+          btnOkColor: AppPalette.green,
+          btnCancelColor: AppPalette.blue)
       .show();
 }

@@ -50,7 +50,7 @@ class DatabaseHelper {
           CREATE TABLE calls(
             id TEXT PRIMARY KEY,
             contact TEXT,
-            callTime INTEGER,
+            callTime TEXT,
             FOREIGN KEY (contact) REFERENCES contacts (userId)
           )
         ''');
@@ -58,7 +58,6 @@ class DatabaseHelper {
     );
   }
 
-  // User Registration
   Future<void> registerUser(User user) async {
     final db = await database;
     await db.insert(
@@ -68,7 +67,6 @@ class DatabaseHelper {
     );
   }
 
-  // User Login
   Future<User?> loginUser(String email, String password) async {
     final db = await database;
     final List<Map<String, dynamic>> userMaps = await db.query(
@@ -80,13 +78,9 @@ class DatabaseHelper {
     if (userMaps.isNotEmpty) {
       return User.fromMap(userMaps.first);
     }
-    return null; // Return null if no user found
+    return null; 
   }
 
-  // User Logout (you might implement token management instead)
-  void logoutUser() {
-    // Implement logout logic as needed
-  }
 
   Future<User?> getCurrentUser() async {
     FlutterSecureStorage storage = const FlutterSecureStorage();
@@ -104,10 +98,9 @@ class DatabaseHelper {
         return User.fromMap(userMaps.first);
       }
     }
-    return null; // Return null if no user found or userId doesn't exist
+    return null;
   }
 
-  // Add Contact
   Future<void> addContact(Contact contact) async {
     final db = await database;
     await db.insert(
@@ -127,7 +120,6 @@ class DatabaseHelper {
     );
   }
 
-  // Delete Contact
   Future<void> deleteContact(String phoneNumber) async {
     final db = await database;
     await db.delete(

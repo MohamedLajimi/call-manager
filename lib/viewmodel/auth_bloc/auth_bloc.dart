@@ -1,5 +1,3 @@
-import 'dart:developer';
-
 import 'package:call_me_app/database/database_helper.dart';
 import 'package:call_me_app/models/user.dart';
 import 'package:equatable/equatable.dart';
@@ -13,18 +11,27 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final DatabaseHelper _databaseHelper;
   AuthBloc({required DatabaseHelper databaseHelper})
       : _databaseHelper = databaseHelper,
-        super(const UserUnkown()) {
-    on<CheckUserState>((event, emit) async {
-      final user = await _databaseHelper.getCurrentUser();
-      log(user.toString());
-      user != null
-          ? emit(UserIsAuthenticated(user))
-          : emit(const UserIsNotAuthenticated());
-    });
-    on<SetUser>((event, emit) async {
-      const storage = FlutterSecureStorage();
-      await storage.write(key: 'userId', value: event.user.id);
-      emit(UserIsAuthenticated(event.user));
-    });
+        super(AuthInitial()) {
+    on<LoginUser>(
+      (event, emit) async {
+        emit(AuthLoading());
+        final user =
+            await _databaseHelper.loginUser(event.email, event.password);
+        if (user != null) {
+          const storage = FlutterSecureStorage();
+          await storage.write(key: 'userId', value: user.id);
+          emit(AuthSuccess(user));
+        } else {
+          emit(const AuthFailure('Invalid credentials'));
+        }
+      },
+    );
+    on<RegisterUser>(
+      (event, emit) async {
+        emit(AuthLoading());
+        await _databaseHelper.registerUser(event.user);
+        emit(AuthSuccess(event.user));
+      },
+    );
   }
 }

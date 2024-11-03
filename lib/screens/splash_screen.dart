@@ -1,7 +1,6 @@
 import 'dart:async';
-import 'package:call_me_app/core/theme/app_palette.dart';
+import 'package:call_me_app/core/widgets/loader.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:go_router/go_router.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -31,15 +30,15 @@ class _SplashScreenState extends State<SplashScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            Image.asset(
-              'assets/splash_logo.png',
-              height: 300,
-              width: 300,
-            ),
-            const SpinKitWave(
-              color: AppPalette.primary,
-              size: 40,
-            )
+            ColorFiltered(
+                colorFilter: ColorFilter.mode(
+                    Theme.of(context).colorScheme.primary, BlendMode.srcIn),
+                child: Image.asset(
+                  width: 300,
+                  height: 300,
+                  'assets/splash_logo.png',
+                )),
+            const Loader()
           ],
         ),
       ),

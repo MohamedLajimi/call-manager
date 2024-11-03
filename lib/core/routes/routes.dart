@@ -1,4 +1,5 @@
 import 'package:call_me_app/database/database_helper.dart';
+import 'package:call_me_app/init_dependencies.dart';
 import 'package:call_me_app/models/contact.dart';
 import 'package:call_me_app/screens/add_contact_screen.dart';
 import 'package:call_me_app/screens/edit_contact_page.dart';
@@ -33,9 +34,9 @@ final GoRouter router = GoRouter(initialLocation: '/', routes: [
       builder: (context, state) {
         final userId = state.pathParameters['id'] as String;
         return BlocProvider(
-          create: (context) => ContactBloc(databaseHelper: DatabaseHelper())
+          create: (context) => serviceLocator<ContactBloc>()
             ..add(FetchContacts(userId: userId)),
-          child: const HomeScreen(),
+          child: const HomeScreen()
         );
       }),
   GoRoute(

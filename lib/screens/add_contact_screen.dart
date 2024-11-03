@@ -10,11 +10,12 @@ import 'package:call_me_app/core/widgets/custom_textfield.dart';
 import 'package:call_me_app/core/widgets/user_image_picker.dart';
 import 'package:call_me_app/database/database_helper.dart';
 import 'package:call_me_app/models/contact.dart';
-import 'package:call_me_app/viewmodel/auth_bloc/auth_bloc.dart';
 import 'package:call_me_app/viewmodel/contact_bloc/contact_bloc.dart';
+import 'package:call_me_app/viewmodel/user_bloc/user_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:toastification/toastification.dart';
 
 class AddContactSceen extends StatefulWidget {
   const AddContactSceen({super.key});
@@ -54,7 +55,7 @@ class _AddContactSceenState extends State<AddContactSceen> {
             },
             icon: const Icon(
               Icons.keyboard_arrow_left,
-              color: AppPalette.secondary,
+              color: AppPalette.lightGrey,
             )),
         title: const Text(
           'Add Contact',
@@ -78,9 +79,12 @@ class _AddContactSceenState extends State<AddContactSceen> {
                 const SizedBox(
                   height: 30,
                 ),
-                const Text(
+                Text(
                   'Full Name',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+                  style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      color: Theme.of(context).colorScheme.primary),
                 ),
                 const SizedBox(
                   height: 5,
@@ -95,9 +99,12 @@ class _AddContactSceenState extends State<AddContactSceen> {
                 const SizedBox(
                   height: 20,
                 ),
-                const Text(
+                Text(
                   'Phone Number',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+                  style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      color: Theme.of(context).colorScheme.primary),
                 ),
                 const SizedBox(
                   height: 5,
@@ -115,7 +122,7 @@ class _AddContactSceenState extends State<AddContactSceen> {
                       onPressed: () async {
                         if (_addContactFormKey.currentState!.validate()) {
                           final contact = Contact(
-                            userId: (context.read<AuthBloc>().state
+                            userId: (context.read<UserBloc>().state
                                     as UserIsAuthenticated)
                                 .user
                                 .id,
@@ -131,11 +138,14 @@ class _AddContactSceenState extends State<AddContactSceen> {
                                 .add(FetchContacts(userId: contact.userId));
                           });
 
-                          showToast(message: 'Contact created successfully');
+                          showToast(
+                              message: 'Contact created successfully',
+                              context: context,
+                              type: ToastificationType.success);
                         }
                       },
                       title: 'ADD CONTACT',
-                      backgroundColor: AppPalette.green),
+                      backgroundColor: AppPalette.blue),
                 ),
                 const SizedBox(
                   height: 50,

@@ -1,6 +1,9 @@
 import 'package:call_me_app/core/theme/app_palette.dart';
 import 'package:call_me_app/core/widgets/custom_button.dart';
-import 'package:call_me_app/viewmodel/auth_bloc/auth_bloc.dart';
+import 'package:call_me_app/core/widgets/loader.dart';
+import 'package:call_me_app/core/widgets/theme_button.dart';
+import 'package:call_me_app/viewmodel/theme_bloc/theme_bloc.dart';
+import 'package:call_me_app/viewmodel/user_bloc/user_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -12,8 +15,44 @@ class WelcomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(),
+      appBar: AppBar(
+        centerTitle: true,
+        title: ColorFiltered(
+            colorFilter: ColorFilter.mode(
+                Theme.of(context).colorScheme.primary, BlendMode.srcIn),
+            child: Image.asset(
+              width: 80,
+              height: 80,
+              'assets/app_logo.png',
+            )),
+        actions: [
+          BlocBuilder<ThemeBloc, ThemeState>(
+            builder: (context, state) {
+              bool isDark = state is DarkThemeState;
+              return ThemeButton(
+                onPressed: () {
+                  BlocProvider.of<ThemeBloc>(context)
+                      .add(ToggleTheme(isDark ? 'light' : 'dark'));
+                },
+                icon: isDark
+                    ? const Icon(
+                        Icons.light_mode_outlined,
+                        size: 20,
+                      )
+                    : const Icon(
+                        Icons.dark_mode_outlined,
+                        size: 20,
+                      ),
+              );
+            },
+          ),
+          const SizedBox(
+            width: 10,
+          )
+        ],
+      ),
       body: SingleChildScrollView(
+        padding: const EdgeInsets.symmetric(horizontal: 10),
         child: Center(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
@@ -32,7 +71,9 @@ class WelcomeScreen extends StatelessWidget {
               Text(
                 'Welcome To Contact Manager',
                 style: GoogleFonts.poppins(
-                    fontSize: 22, fontWeight: FontWeight.w700),
+                    color: Theme.of(context).colorScheme.primary,
+                    fontSize: 20,
+                    fontWeight: FontWeight.w700),
               ),
               const SizedBox(
                 height: 10,
@@ -40,26 +81,33 @@ class WelcomeScreen extends StatelessWidget {
               const Text(
                 textAlign: TextAlign.center,
                 'Discover exclusive contacts and manage them effortlessly. Everything you need is right at your fingertips !',
-                style: TextStyle(fontSize: 14, color: AppPalette.secondary),
+                style: TextStyle(fontSize: 13, color: AppPalette.lightGrey),
               ),
               const SizedBox(
                 height: 50,
               ),
-              BlocListener<AuthBloc, AuthState>(
+              BlocConsumer<UserBloc, UserState>(
                 listener: (context, state) {
                   if (state is UserIsNotAuthenticated) {
                     context.go('/login-screen');
                   } else if (state is UserIsAuthenticated) {
-                    context.go('/home-screen/${state.user.id}',extra: state.user.name);
+                    context.go(
+                      '/home-screen/${state.user.id}',
+                    );
                   }
                 },
-                child: CustomButton(
-                  onPressed: () {
-                    context.read<AuthBloc>().add(CheckUserState());
-                  },
-                  title: 'LOGIN',
-                  backgroundColor: AppPalette.green,
-                ),
+                builder: (context, state) {
+                  if (state is UserLoading) {
+                    return const Loader();
+                  }
+                  return CustomButton(
+                    onPressed: () {
+                      context.read<UserBloc>().add(CheckUserState());
+                    },
+                    title: 'START',
+                    backgroundColor: AppPalette.blue,
+                  );
+                },
               )
             ],
           ),
