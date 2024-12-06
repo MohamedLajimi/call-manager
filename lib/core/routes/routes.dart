@@ -1,15 +1,13 @@
-import 'package:call_me_app/database/database_helper.dart';
-import 'package:call_me_app/init_dependencies.dart';
 import 'package:call_me_app/models/contact.dart';
 import 'package:call_me_app/screens/add_contact_screen.dart';
 import 'package:call_me_app/screens/edit_contact_page.dart';
 import 'package:call_me_app/screens/home_screen.dart';
+import 'package:call_me_app/screens/localisation_screen.dart';
 import 'package:call_me_app/screens/login_screen.dart';
+import 'package:call_me_app/screens/profile_screen.dart';
 import 'package:call_me_app/screens/register_screen.dart';
 import 'package:call_me_app/screens/splash_screen.dart';
 import 'package:call_me_app/screens/welcome_screen.dart';
-import 'package:call_me_app/viewmodel/contact_bloc/contact_bloc.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 final GoRouter router = GoRouter(initialLocation: '/', routes: [
@@ -30,14 +28,9 @@ final GoRouter router = GoRouter(initialLocation: '/', routes: [
     builder: (context, state) => const RegisterScreen(),
   ),
   GoRoute(
-      path: '/home-screen/:id',
+      path: '/home-screen',
       builder: (context, state) {
-        final userId = state.pathParameters['id'] as String;
-        return BlocProvider(
-          create: (context) => serviceLocator<ContactBloc>()
-            ..add(FetchContacts(userId: userId)),
-          child: const HomeScreen()
-        );
+        return const HomeScreen();
       }),
   GoRoute(
       path: '/add-contact-screen',
@@ -49,5 +42,11 @@ final GoRouter router = GoRouter(initialLocation: '/', routes: [
         return EditContactScreen(
           contact: contact,
         );
-      })
+      }),
+  GoRoute(
+      path: '/profile-screen',
+      builder: (context, state) => const ProfileScreen()),
+  GoRoute(
+      path: '/localisation-screen',
+      builder: (context, state) => const LocalisationScreen()),
 ]);

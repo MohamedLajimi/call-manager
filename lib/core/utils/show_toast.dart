@@ -14,7 +14,7 @@ void showToast(
       title: Text(
         message,
         style: TextStyle(
-            color: Theme.of(context).colorScheme.primary, fontSize: 14),
+            color: Theme.of(context).colorScheme.primary, fontSize: 13),
       ),
       icon: type == ToastificationType.error
           ? const Icon(

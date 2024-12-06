@@ -1,13 +1,17 @@
+// ignore_for_file: use_build_context_synchronously
+
+import 'dart:developer';
+
 import 'package:call_me_app/core/theme/app_palette.dart';
+import 'package:call_me_app/core/theme/theme.dart';
 import 'package:call_me_app/core/widgets/custom_button.dart';
-import 'package:call_me_app/core/widgets/loader.dart';
 import 'package:call_me_app/core/widgets/theme_button.dart';
-import 'package:call_me_app/viewmodel/theme_bloc/theme_bloc.dart';
-import 'package:call_me_app/viewmodel/user_bloc/user_bloc.dart';
+import 'package:call_me_app/viewmodel/theme_provider.dart';
+import 'package:call_me_app/viewmodel/user_provider.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
 
 class WelcomeScreen extends StatelessWidget {
   const WelcomeScreen({super.key});
@@ -26,25 +30,19 @@ class WelcomeScreen extends StatelessWidget {
               'assets/app_logo.png',
             )),
         actions: [
-          BlocBuilder<ThemeBloc, ThemeState>(
-            builder: (context, state) {
-              bool isDark = state is DarkThemeState;
-              return ThemeButton(
-                onPressed: () {
-                  BlocProvider.of<ThemeBloc>(context)
-                      .add(ToggleTheme(isDark ? 'light' : 'dark'));
-                },
-                icon: isDark
-                    ? const Icon(
-                        Icons.light_mode_outlined,
-                        size: 20,
-                      )
-                    : const Icon(
-                        Icons.dark_mode_outlined,
-                        size: 20,
-                      ),
-              );
+          AppBarButton(
+            onPressed: () {
+              Provider.of<ThemeProvider>(context, listen: false).toggleTheme();
             },
+            icon: Provider.of<ThemeProvider>(context).theme == lightTheme
+                ? const Icon(
+                    Icons.light_mode_outlined,
+                    size: 20,
+                  )
+                : const Icon(
+                    Icons.dark_mode_outlined,
+                    size: 20,
+                  ),
           ),
           const SizedBox(
             width: 10,
@@ -58,7 +56,7 @@ class WelcomeScreen extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               const SizedBox(
-                height: 60,
+                height: 50,
               ),
               Image.asset(
                 'assets/splash_image.png',
@@ -86,28 +84,18 @@ class WelcomeScreen extends StatelessWidget {
               const SizedBox(
                 height: 50,
               ),
-              BlocConsumer<UserBloc, UserState>(
-                listener: (context, state) {
-                  if (state is UserIsNotAuthenticated) {
-                    context.go('/login-screen');
-                  } else if (state is UserIsAuthenticated) {
-                    context.go(
-                      '/home-screen/${state.user.id}',
-                    );
-                  }
+              CustomButton(
+                onPressed: () async {
+                  final user =
+                      await Provider.of<UserProvider>(context, listen: false)
+                          .fetchUserData();
+                  log(user.toString());
+                  user != null
+                      ? context.go('/home-screen')
+                      : context.go('/login-screen');
                 },
-                builder: (context, state) {
-                  if (state is UserLoading) {
-                    return const Loader();
-                  }
-                  return CustomButton(
-                    onPressed: () {
-                      context.read<UserBloc>().add(CheckUserState());
-                    },
-                    title: 'START',
-                    backgroundColor: AppPalette.blue,
-                  );
-                },
+                title: 'START',
+                backgroundColor: AppPalette.blue,
               )
             ],
           ),

@@ -1,18 +1,18 @@
 // ignore_for_file: use_build_context_synchronously
 
 import 'package:call_me_app/core/theme/app_palette.dart';
+import 'package:call_me_app/core/theme/theme.dart';
 import 'package:call_me_app/core/utils/show_toast.dart';
 import 'package:call_me_app/core/widgets/custom_button.dart';
 import 'package:call_me_app/core/widgets/custom_textfield.dart';
-import 'package:call_me_app/core/widgets/loader.dart';
 import 'package:call_me_app/core/widgets/theme_button.dart';
-import 'package:call_me_app/viewmodel/auth_bloc/auth_bloc.dart';
-import 'package:call_me_app/viewmodel/theme_bloc/theme_bloc.dart';
-import 'package:call_me_app/viewmodel/user_bloc/user_bloc.dart';
+import 'package:call_me_app/viewmodel/auth_provider.dart';
+import 'package:call_me_app/viewmodel/theme_provider.dart';
+import 'package:call_me_app/viewmodel/user_provider.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
 import 'package:toastification/toastification.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -49,25 +49,19 @@ class _LoginScreenState extends State<LoginScreen> {
               'assets/app_logo.png',
             )),
         actions: [
-          BlocBuilder<ThemeBloc, ThemeState>(
-            builder: (context, state) {
-              bool isDark = state is DarkThemeState;
-              return ThemeButton(
-                onPressed: () {
-                  BlocProvider.of<ThemeBloc>(context)
-                      .add(ToggleTheme(isDark ? 'light' : 'dark'));
-                },
-                icon: isDark
-                    ? const Icon(
-                        Icons.light_mode_outlined,
-                        size: 20,
-                      )
-                    : const Icon(
-                        Icons.dark_mode_outlined,
-                        size: 20,
-                      ),
-              );
+          AppBarButton(
+            onPressed: () {
+              Provider.of<ThemeProvider>(context, listen: false).toggleTheme();
             },
+            icon: Provider.of<ThemeProvider>(context).theme == lightTheme
+                ? const Icon(
+                    Icons.light_mode_outlined,
+                    size: 20,
+                  )
+                : const Icon(
+                    Icons.dark_mode_outlined,
+                    size: 20,
+                  ),
           ),
           const SizedBox(
             width: 10,
@@ -84,16 +78,16 @@ class _LoginScreenState extends State<LoginScreen> {
                 Text(
                   'Hi There ! Login or create a new account if you don\'t have a one .',
                   style: GoogleFonts.poppins(
-                      fontSize: 24,
+                      fontSize: 19,
                       color: Theme.of(context).colorScheme.primary,
                       fontWeight: FontWeight.w700),
                 ),
                 const SizedBox(
-                  height: 30,
+                  height: 15,
                 ),
                 const Text(
                   'Please enter a valid email and password to continue !',
-                  style: TextStyle(fontSize: 15, color: AppPalette.lightGrey),
+                  style: TextStyle(fontSize: 14, color: AppPalette.lightGrey),
                 ),
                 const SizedBox(
                   height: 30,
@@ -101,7 +95,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 Text(
                   'Email',
                   style: TextStyle(
-                      fontSize: 16,
+                      fontSize: 14,
                       fontWeight: FontWeight.w700,
                       color: Theme.of(context).colorScheme.primary),
                 ),
@@ -118,7 +112,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 Text(
                   'Password',
                   style: TextStyle(
-                      fontSize: 16,
+                      fontSize: 14,
                       fontWeight: FontWeight.w700,
                       color: Theme.of(context).colorScheme.primary),
                 ),
@@ -138,34 +132,31 @@ class _LoginScreenState extends State<LoginScreen> {
                 const SizedBox(
                   height: 40,
                 ),
-                BlocConsumer<AuthBloc, AuthState>(
-                  listener: (context, state) {
-                    if (state is AuthSuccess) {
-                      context.read<UserBloc>().add(SetUser(state.user));
-                      context.go('/home-screen/${state.user.id}',
-                          extra: state.user.name);
-                    } else if (state is AuthFailure) {
-                      showToast(message: state.error,context: context,type: ToastificationType.error);
-                    }
-                  },
-                  builder: (context, state) {
-                    if (state is AuthLoading) {
-                      return const Loader();
-                    }
-                    return Align(
-                      alignment: Alignment.center,
-                      child: CustomButton(
-                          onPressed: () async {
-                            if (_loginFormKey.currentState!.validate()) {
-                              context.read<AuthBloc>().add(LoginUser(
+                Align(
+                  alignment: Alignment.center,
+                  child: CustomButton(
+                      onPressed: () async {
+                        if (_loginFormKey.currentState!.validate()) {
+                          final res = await Provider.of<AuthProvider>(context,
+                                  listen: false)
+                              .loginUser(
                                   email: emailController.text,
-                                  password: passwordController.text));
-                            }
-                          },
-                          title: 'LOGIN',
-                          backgroundColor: AppPalette.blue),
-                    );
-                  },
+                                  password: passwordController.text);
+                          res.fold(
+                            (l) => showToast(
+                                message: l,
+                                context: context,
+                                type: ToastificationType.error),
+                            (r) {
+                              Provider.of<UserProvider>(context, listen: false)
+                                  .setUser(r);
+                              context.go('/home-screen');
+                            },
+                          );
+                        }
+                      },
+                      title: 'LOGIN',
+                      backgroundColor: AppPalette.blue),
                 ),
                 const SizedBox(
                   height: 50,
@@ -176,7 +167,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     const Text(
                       'Don\'t have an account ?',
                       style:
-                          TextStyle(fontSize: 14, color: AppPalette.lightGrey),
+                          TextStyle(fontSize: 13, color: AppPalette.lightGrey),
                     ),
                     const SizedBox(
                       width: 10,
@@ -187,7 +178,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           'Register Now',
                           style: TextStyle(
                               fontWeight: FontWeight.w700,
-                              fontSize: 14,
+                              fontSize: 13,
                               color: Theme.of(context).colorScheme.primary),
                         ))
                   ],

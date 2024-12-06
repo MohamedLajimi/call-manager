@@ -41,7 +41,7 @@ class CustomTextfield extends StatelessWidget {
                   ))
               : const SizedBox(),
           hintText: hintText,
-          hintStyle: const TextStyle(color: AppPalette.lightGrey, fontSize: 14),
+          hintStyle: const TextStyle(color: AppPalette.lightGrey, fontSize: 12),
           errorStyle: const TextStyle(fontSize: 12, color: Colors.red),
           contentPadding:
               const EdgeInsets.symmetric(horizontal: 10, vertical: 5),

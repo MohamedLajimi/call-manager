@@ -41,7 +41,7 @@ class User extends Equatable {
       email: map['email'] as String,
       password: map['password'] as String,
       phoneNumber: map['phoneNumber'] as String,
-      picture: map['picture'] as String,
+      picture: map['picture'],
     
       
     );

@@ -20,21 +20,20 @@ class ContactListTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return ListTile(
       onTap: () => onTap(),
-      contentPadding: const EdgeInsets.all(0),
-      shape: BeveledRectangleBorder(borderRadius: BorderRadius.circular(3)),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 10),
+      shape: BeveledRectangleBorder(
+          borderRadius: BorderRadius.circular(3),
+          side: const BorderSide(color: AppPalette.lightGrey, width: 0.1)),
       leading: CircleAvatar(
         backgroundImage: FileImage(File(contact.picture)),
       ),
       title: Text(
         contact.name,
-        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+        style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
       ),
       subtitle: Text(
-        '+216 ${contact.phoneNumber}',
-        style: const TextStyle(
-            fontSize: 13,
-            fontWeight: FontWeight.w600,
-            color: AppPalette.lightGrey),
+        contact.phoneNumber,
+        style: const TextStyle(fontSize: 12, color: AppPalette.lightGrey),
       ),
       trailing: SizedBox(
         width: 108,

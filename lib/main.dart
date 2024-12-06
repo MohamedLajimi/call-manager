@@ -1,35 +1,34 @@
-import 'package:call_me_app/bloc_observer.dart';
 import 'package:call_me_app/core/routes/routes.dart';
-import 'package:call_me_app/core/theme/theme.dart';
 import 'package:call_me_app/init_dependencies.dart';
-import 'package:call_me_app/viewmodel/auth_bloc/auth_bloc.dart';
-import 'package:call_me_app/viewmodel/contact_bloc/contact_bloc.dart';
-import 'package:call_me_app/viewmodel/theme_bloc/theme_bloc.dart';
-import 'package:call_me_app/viewmodel/user_bloc/user_bloc.dart';
+import 'package:call_me_app/services/localisation_service.dart';
+import 'package:call_me_app/viewmodel/auth_provider.dart';
+import 'package:call_me_app/viewmodel/contact_provider.dart';
+import 'package:call_me_app/viewmodel/localisation_provider.dart';
+import 'package:call_me_app/viewmodel/theme_provider.dart';
+import 'package:call_me_app/viewmodel/user_provider.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:provider/provider.dart';
 import 'package:toastification/toastification.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await initDependencies();
-  const storage = FlutterSecureStorage();
-  final String theme = await storage.read(key: 'theme') ?? 'light';
-  Bloc.observer = SimpleBlocObserver();
-  runApp(MultiBlocProvider(providers: [
-    BlocProvider(
-      create: (context) => ThemeBloc()..add(FetchTheme(theme)),
+  runApp(MultiProvider(providers: [
+    ChangeNotifierProvider(
+      create: (context) => serviceLocator<UserProvider>(),
     ),
-    BlocProvider(
-      create: (context) => serviceLocator<AuthBloc>(),
+    ChangeNotifierProvider(
+      create: (context) => serviceLocator<ThemeProvider>(),
     ),
-    BlocProvider(
-      create: (context) => serviceLocator<UserBloc>(),
+    ChangeNotifierProvider(
+      create: (context) => serviceLocator<AuthProvider>(),
     ),
-    BlocProvider(
-      create: (context) => serviceLocator<ContactBloc>(),
-    )
+    ChangeNotifierProvider(
+      create: (context) => serviceLocator<ContactProvider>(),
+    ),
+    ChangeNotifierProvider(
+      create: (context) => LocalisationProvider(LocalisationService()),
+    ),
   ], child: const MyApp()));
 }
 
@@ -39,17 +38,13 @@ class MyApp extends StatelessWidget {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<ThemeBloc, ThemeState>(
-      builder: (context, state) {
-        return ToastificationWrapper(
-          child: MaterialApp.router(
-            debugShowCheckedModeBanner: false,
-            routerConfig: router,
-            title: 'Flutter Demo',
-            theme: state is LightThemeState ? lightTheme : darkTheme,
-          ),
-        );
-      },
+    return ToastificationWrapper(
+      child: MaterialApp.router(
+        debugShowCheckedModeBanner: false,
+        routerConfig: router,
+        title: 'Flutter Demo',
+        theme: Provider.of<ThemeProvider>(context).theme,
+      ),
     );
   }
 }

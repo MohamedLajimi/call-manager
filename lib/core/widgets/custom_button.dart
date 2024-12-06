@@ -15,14 +15,17 @@ class CustomButton extends StatelessWidget {
     return ElevatedButton(
         onPressed: onPressed,
         style: ButtonStyle(
-            fixedSize: const WidgetStatePropertyAll(Size(180, 50)),
+            fixedSize: const WidgetStatePropertyAll(Size(130, 45)),
             shape: WidgetStatePropertyAll(
                 BeveledRectangleBorder(borderRadius: BorderRadius.circular(3))),
             backgroundColor: WidgetStatePropertyAll(backgroundColor)),
         child: Text(
           title,
           style: const TextStyle(
-              fontSize: 16, color: Colors.white, fontWeight: FontWeight.w700),
+              letterSpacing: 1.1,
+              fontSize: 15,
+              color: Colors.white,
+              fontWeight: FontWeight.w700),
         ));
   }
 }

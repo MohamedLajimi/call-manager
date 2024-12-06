@@ -1,26 +1,31 @@
 import 'package:call_me_app/database/database_helper.dart';
-import 'package:call_me_app/viewmodel/auth_bloc/auth_bloc.dart';
-import 'package:call_me_app/viewmodel/contact_bloc/contact_bloc.dart';
-import 'package:call_me_app/viewmodel/user_bloc/user_bloc.dart';
+import 'package:call_me_app/viewmodel/auth_provider.dart';
+import 'package:call_me_app/viewmodel/contact_provider.dart';
+import 'package:call_me_app/viewmodel/theme_provider.dart';
+import 'package:call_me_app/viewmodel/user_provider.dart';
 import 'package:get_it/get_it.dart';
 
 final serviceLocator = GetIt.instance;
 
 Future<void> initDependencies() async {
-  // Auth dependencies
+  // Database dependencies
   serviceLocator.registerLazySingleton<DatabaseHelper>(
     () => DatabaseHelper(),
   );
-  serviceLocator.registerLazySingleton(
-    () => AuthBloc(databaseHelper: serviceLocator()),
+
+  // Theme dependency
+
+  serviceLocator.registerLazySingleton<ThemeProvider>(
+    () => ThemeProvider(),
   );
+
+  // Auth dependencies
   serviceLocator.registerLazySingleton(
-    () => UserBloc(databaseHelper: serviceLocator()),
-  );
+      () => AuthProvider(databaseHelper: serviceLocator()));
+  serviceLocator.registerLazySingleton(() => UserProvider(serviceLocator()));
 
   // Contact dependencies
-
-  serviceLocator.registerFactory<ContactBloc>(
-    () => ContactBloc(databaseHelper: serviceLocator()),
+  serviceLocator.registerFactory(
+    () => ContactProvider(serviceLocator()),
   );
 }

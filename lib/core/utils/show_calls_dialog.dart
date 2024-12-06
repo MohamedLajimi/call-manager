@@ -23,10 +23,8 @@ void showCallsDialog(
           desc: 'Make a phone call or send a message.',
           btnCancelOnPress: onSendMessage,
           btnOkOnPress: onCall,
-          btnOkIcon: Icons.call ,
-          btnOkText: 'Call',
-          btnCancelText: 'Send Message',
-          btnCancelIcon: Icons.chat_bubble_outline,
+          btnOkText: 'CALL',
+          btnCancelText: 'SMS',
           buttonsTextStyle: const TextStyle(color: Colors.white, fontSize: 16),
           btnOkColor: AppPalette.green,
           btnCancelColor: AppPalette.blue)

@@ -65,6 +65,8 @@ class DatabaseHelper {
       user.toMap(),
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
+    const storage = FlutterSecureStorage();
+    await storage.write(key: 'userId', value: user.id);
   }
 
   Future<User?> loginUser(String email, String password) async {
@@ -78,9 +80,8 @@ class DatabaseHelper {
     if (userMaps.isNotEmpty) {
       return User.fromMap(userMaps.first);
     }
-    return null; 
+    return null;
   }
-
 
   Future<User?> getCurrentUser() async {
     FlutterSecureStorage storage = const FlutterSecureStorage();
@@ -101,6 +102,16 @@ class DatabaseHelper {
     return null;
   }
 
+  Future<void> editCurrentUser({required User user}) async {
+    final db = await database;
+    await db.update(
+      'users',
+      user.toMap(),
+      where: 'id = ?',
+      whereArgs: [user.id],
+    );
+  }
+
   Future<void> addContact(Contact contact) async {
     final db = await database;
     await db.insert(
@@ -110,7 +121,7 @@ class DatabaseHelper {
     );
   }
 
-  Future<void> editContact(Contact contact,String phoneNumber) async {
+  Future<void> editContact(Contact contact, String phoneNumber) async {
     final db = await database;
     await db.update(
       'contacts',
